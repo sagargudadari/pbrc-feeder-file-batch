@@ -15,7 +15,9 @@ target/
 *.iml
 *.ipr
 traget/
-
+HELP.md
+mvnw
+mvnw.cmd
 
 ### NetBeans ###
 nbproject/private/

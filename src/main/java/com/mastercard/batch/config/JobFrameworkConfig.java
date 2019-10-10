@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class JobFrameworkConfig {
 
-    public TaskExecutor taskExecutor(Integer numberOfThreads){
-        SimpleAsyncTaskExecutor asyncTaskExecutor=new SimpleAsyncTaskExecutor("gcms-transactions-details");
+    public TaskExecutor taskExecutor(Integer numberOfThreads) {
+        SimpleAsyncTaskExecutor asyncTaskExecutor = new SimpleAsyncTaskExecutor("gcms-transactions-details");
         asyncTaskExecutor.setConcurrencyLimit(numberOfThreads);
         return asyncTaskExecutor;
     }

@@ -1,4 +1,4 @@
-package com.mastercard.batch.config;
+package com.mastercard.batch.exception;
 
 
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,6 @@ import org.springframework.stereotype.Component;
 public class JobExceptionHandler implements ExceptionHandler {
     @Override
     public void handleException(RepeatContext repeatContext, Throwable throwable) throws Throwable {
-      log.error(throwable.getMessage());
+        log.error(throwable.getMessage());
     }
 }

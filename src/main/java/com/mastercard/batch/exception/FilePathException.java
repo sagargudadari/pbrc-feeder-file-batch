@@ -1,6 +1,4 @@
-package com.mastercard.exception;
-
-import javax.swing.tree.ExpandVetoException;
+package com.mastercard.batch.exception;
 
 public class FilePathException extends Exception {
 
