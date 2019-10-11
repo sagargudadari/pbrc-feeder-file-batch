@@ -1,4 +1,4 @@
-package com.mastercard.batch.entity;
+package com.mastercard.batch.model;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 @Data
-public class GcmsBillingEventDetail {
+public class DebitBillingEventDetail {
 
     private String prcssDt;
     private String imeTraceId;
@@ -38,7 +38,7 @@ public class GcmsBillingEventDetail {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GcmsBillingEventDetail that = (GcmsBillingEventDetail) o;
+        DebitBillingEventDetail that = (DebitBillingEventDetail) o;
         return Objects.equals(imeTraceId, that.imeTraceId) &&
                 Objects.equals(guidePointId, that.guidePointId) &&
                 Objects.equals(billEventId, that.billEventId);
