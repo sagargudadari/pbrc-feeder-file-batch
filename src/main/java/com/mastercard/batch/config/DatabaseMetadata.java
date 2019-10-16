@@ -3,7 +3,7 @@ package com.mastercard.batch.config;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.mastercard.batch.model.GcmsBillingEventDetail;
+import com.mastercard.batch.model.IFeeder;
 import com.mastercard.batch.model.TableMetaDataModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,23 +15,18 @@ import java.util.stream.Collectors;
 @Component
 public class DatabaseMetadata {
 
-    public TableMetaDataModel getTableMetaDataModel(final String tableName) {
+    public TableMetaDataModel getTableMetaDataModel(final String tableName, IFeeder iFeeder) {
         TableMetaDataModel dataModel = new TableMetaDataModel();
-        GcmsBillingEventDetail gcmsBillingEventDetail = new GcmsBillingEventDetail();
 
-        //List<String> columnsList = buildColumnsFromTable(tableName, dataSource);
-        List<String> columnsList2 = Lists.newArrayList(Splitter.on(",").split(gcmsBillingEventDetail.toCommaSeparatedVariables()));
+        List<String> columnsList = Lists.newArrayList(Splitter.on(",").split(iFeeder.toCommaSeparatedVariables()));
 
-        dataModel.setBuildFileHeaderFromDbColumns(buildFileHeaderFromDbColumns(columnsList2));
-        dataModel.setBuildInsertHeaderFromDbColumns(buildInsertHeaderFromDbColumns(columnsList2));
-        dataModel.setBuildValuesHeaderFromDbColumns(buildValuesHeaderFromDbColumns(columnsList2));
+        dataModel.setBuildFileHeaderFromDbColumns(buildFileHeaderFromDbColumns(columnsList));
+        dataModel.setBuildInsertHeaderFromDbColumns(buildInsertHeaderFromDbColumns(columnsList));
+        dataModel.setBuildValuesHeaderFromDbColumns(buildValuesHeaderFromDbColumns(columnsList));
         dataModel.setTableName(tableName);
         dataModel.setBuildQuery(buildInsertQuery(dataModel));
 
-        log.info("=====> getBuildQuery {}", dataModel.getBuildQuery());
-        log.info("=====> new setBuildFileHeaderFromDbColumns {}", dataModel.getBuildValuesHeaderFromDbColumns());
-        log.info("=====> new setBuildInsertHeaderFromDbColumns {}",dataModel.getBuildInsertHeaderFromDbColumns());
-        log.info("=====> new setBuildValuesHeaderFromDbColumns {}", dataModel.getBuildValuesHeaderFromDbColumns());
+        log.info(dataModel.getBuildQuery());
 
         return dataModel;
     }
@@ -41,7 +36,7 @@ public class DatabaseMetadata {
     }
 
     private String[] buildFileHeaderFromDbColumns(final List<String> columnsList) {
-        return columnsList.stream().map(name -> (CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, name))).toArray(String[]::new);
+        return columnsList.stream().map(name -> name.matches("_") ? name.toUpperCase() : (CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, name))).toArray(String[]::new);
     }
 
     private String buildValuesHeaderFromDbColumns(final List<String> columnsList) {

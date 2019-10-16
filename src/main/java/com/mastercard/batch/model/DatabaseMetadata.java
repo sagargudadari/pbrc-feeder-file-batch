@@ -35,7 +35,7 @@ public class DatabaseMetadata {
     }
 
     private String[] buildFileHeaderFromDbColumns(final List<String> columnsList) {
-        return columnsList.stream().map(name -> (CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, name))).toArray(String[]::new);
+        return columnsList.stream().map(name -> name.matches("_") ? name.toUpperCase() : (CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, name))).toArray(String[]::new);
     }
 
     private String buildValuesHeaderFromDbColumns(final List<String> columnsList) {

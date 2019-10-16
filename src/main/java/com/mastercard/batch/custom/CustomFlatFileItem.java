@@ -10,10 +10,10 @@ import org.springframework.core.io.FileSystemResource;
 public class CustomFlatFileItem<T> extends FlatFileItemReader<T> {
 
     @SuppressWarnings("unchecked")
-    public FlatFileItemReader<T> buildFlatFileItemReader(T t, TableMetaDataModel tableMetaDataModel) {
+    public FlatFileItemReader<T> buildFlatFileItemReader(T t, TableMetaDataModel tableMetaDataModel, String filePath) {
 
         FlatFileItemReader<T> reader = new FlatFileItemReader<>();
-        reader.setResource(new FileSystemResource("D:\\data_files\\billing_api\\20191006\\GCMS\\Extractedfiles\\GCMS_BA_191006_00000031329_BE\\GCMS_BA_191006_00000031329_BE"));
+        reader.setResource(new FileSystemResource(filePath));
         reader.setLineMapper(new DefaultLineMapper<T>() {{
             setLineTokenizer(new DelimitedLineTokenizer() {{
                 setNames(tableMetaDataModel.getBuildFileHeaderFromDbColumns());

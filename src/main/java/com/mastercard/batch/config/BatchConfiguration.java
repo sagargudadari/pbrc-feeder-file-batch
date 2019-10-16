@@ -2,9 +2,12 @@ package com.mastercard.batch.config;
 
 import com.mastercard.batch.custom.CustomFlatFileItem;
 import com.mastercard.batch.custom.CustomJdbcBatchItemWriter;
+import com.mastercard.batch.listener.CustomItemReaderListener;
+import com.mastercard.batch.listener.CustomItemWriterListener;
 import com.mastercard.batch.listener.JobCompletionNotificationListener;
 import com.mastercard.batch.listener.StepListener;
-import com.mastercard.batch.model.GcmsBillingEventDetail;
+import com.mastercard.batch.model.FeederClassMapper;
+import com.mastercard.batch.model.IFeeder;
 import com.mastercard.batch.model.TableMetaDataModel;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -14,7 +17,7 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,52 +28,76 @@ import java.sql.SQLIntegrityConstraintViolationException;
 @EnableBatchProcessing
 public class BatchConfiguration {
 
-    @Autowired
-    public JobBuilderFactory jobBuilderFactory;
+    private final JobBuilderFactory jobBuilderFactory;
 
-    @Autowired
-    public StepBuilderFactory stepBuilderFactory;
+    private final StepBuilderFactory stepBuilderFactory;
 
-    @Autowired
-    public DatabaseMetadata databaseMetadata;
+    private final DatabaseMetadata databaseMetadata;
 
-    @Autowired
-    public DataSource dataSource;
+    private final DataSource dataSource;
 
-    @Autowired
-    JobFrameworkConfig jobFrameworkConfig;
+    private final JobFrameworkConfig jobFrameworkConfig;
 
-    @Autowired
-    StepListener stepListener;
+    private final StepListener stepListener;
+
+    private final CustomItemReaderListener<Object> customItemReaderListener;
+
+    private final CustomItemWriterListener<Object> customItemWriterListener;
 
     private TableMetaDataModel tableMetaDataModel;
 
-    GcmsBillingEventDetail gcmsBillingEventDetail = new GcmsBillingEventDetail();
-    //GcmsTransactionDetail gcmsBillingEventDetail = new GcmsTransactionDetail();
+    @Value("${batch.input.file.path}")
+    private String filePath;
+
+    @Value("${batch.input.file.type}")
+    private String fileType;
+
+    @Value("${batch.input.file.tableName}")
+    private String tableName;
+
+    private Object feeder;
+
+    public BatchConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
+                              DatabaseMetadata databaseMetadata, DataSource dataSource,
+                              JobFrameworkConfig jobFrameworkConfig,
+                              StepListener stepListener,
+                              CustomItemReaderListener<Object> customItemReaderListener,
+                              CustomItemWriterListener<Object> customItemWriterListener) {
+        this.jobBuilderFactory = jobBuilderFactory;
+        this.stepBuilderFactory = stepBuilderFactory;
+        this.databaseMetadata = databaseMetadata;
+        this.dataSource = dataSource;
+        this.jobFrameworkConfig = jobFrameworkConfig;
+        this.stepListener = stepListener;
+        this.customItemReaderListener = customItemReaderListener;
+        this.customItemWriterListener = customItemWriterListener;
+    }
 
     @SuppressWarnings("unchecked")
     @Bean
     public <T> T reader() {
-        tableMetaDataModel = databaseMetadata.getTableMetaDataModel("GCMS_BILLING_EVENT_DETAIL");
+        feeder = FeederClassMapper.feederClassMap.get(fileType);
+        tableMetaDataModel = databaseMetadata.getTableMetaDataModel(tableName, (IFeeder) feeder);
         CustomFlatFileItem<T> customFlatFileItem = new CustomFlatFileItem<>();
-        FlatFileItemReader<T> buildFlatFileItemReader = (FlatFileItemReader<T>) customFlatFileItem.buildFlatFileItemReader((T) gcmsBillingEventDetail, tableMetaDataModel);
+        FlatFileItemReader<T> buildFlatFileItemReader = (FlatFileItemReader<T>) customFlatFileItem.buildFlatFileItemReader((T) feeder, tableMetaDataModel, filePath);
         return (T) buildFlatFileItemReader;
     }
 
     @SuppressWarnings("unchecked")
     @Bean
     public <T> T writer() {
+        feeder = FeederClassMapper.feederClassMap.get(fileType);
         CustomJdbcBatchItemWriter<T> customJdbcBatchItemWriter = new CustomJdbcBatchItemWriter<T>();
-        JdbcBatchItemWriter<T> buildWriter = (JdbcBatchItemWriter<T>) customJdbcBatchItemWriter.buildWriter((T) gcmsBillingEventDetail, tableMetaDataModel.getBuildQuery(), dataSource);
+        JdbcBatchItemWriter<T> buildWriter = (JdbcBatchItemWriter<T>) customJdbcBatchItemWriter.buildWriter((T) feeder, tableMetaDataModel.getBuildQuery(), dataSource);
         return (T) buildWriter;
     }
 
     @Bean
     public Job importUserJob(JobCompletionNotificationListener listener) {
-        return jobBuilderFactory.get("importUserJob")
+        return jobBuilderFactory.get("feederBatchJob")
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
-                .flow(step1(gcmsBillingEventDetail))
+                .flow(step1(feeder))
                 .end()
                 .build();
     }
@@ -84,6 +111,8 @@ public class BatchConfiguration {
                 .faultTolerant()
                 .skip(SQLIntegrityConstraintViolationException.class)
                 .taskExecutor(jobFrameworkConfig.taskExecutor(3))
+                .listener(customItemReaderListener)
+                .listener(customItemWriterListener)
                 .listener(stepListener)
                 .build();
     }

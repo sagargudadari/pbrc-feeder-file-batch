@@ -6,13 +6,13 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 @Data
-public class GcmsBillingEventDetail {
+public class GcmsBillingEventDetail implements IFeeder {
 
     private String prcssDt;
     private String imeTraceId;
-    private String guidePointPartyId;
     private String summTraceId;
     private String guidePointId;
+    private String guidePointPartyId;
     private String billEventId;
     private BigDecimal qtyNum;
     private BigDecimal convAmt;
@@ -23,9 +23,9 @@ public class GcmsBillingEventDetail {
     public String toCommaSeparatedVariables() {
         return "prcssDt" +
                 ",imeTraceId" +
-                ",guidePointPartyId" +
                 ",summTraceId" +
                 ",guidePointId" +
+                ",guidePointPartyId" +
                 ",billEventId" +
                 ",qtyNum" +
                 ",convAmt" +
@@ -33,7 +33,6 @@ public class GcmsBillingEventDetail {
                 ",ruleSeqNum" +
                 ",chrgAmt";
     }
-
 
     @Override
     public boolean equals(Object o) {

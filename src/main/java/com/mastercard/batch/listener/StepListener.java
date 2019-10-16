@@ -18,7 +18,7 @@ public class StepListener implements StepExecutionListener {
     public ExitStatus afterStep(StepExecution stepExecution) {
         log.info("Total Records Read from file: " + stepExecution.getReadCount());
 
-        log.info("Total Records Skipped due to error: " + stepExecution.getSkipCount());
+        ///log.info("Total Records Skipped due to error: " + stepExecution.getSkipCount());
 
         int write = stepExecution.getReadCount() - stepExecution.getSkipCount();
         log.info("Total Records Write to Database : " + write);
